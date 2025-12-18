@@ -1,0 +1,41 @@
+services:
+  web:
+    build: ./web
+    ports:
+      - "8080:3000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=cloud
+      - DB_USER=user
+      - DB_PASSWORD=pass
+      - PORT=3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  db:
+    image: mysql:8.0
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=cloud
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=pass
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "export MYSQL_PWD=root; mysqladmin ping -h localhost -u root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  db_data:
+    
+    
